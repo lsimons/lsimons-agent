@@ -3,7 +3,7 @@ name = "lsimons-agent"
 version = "0.1.0"
 description = "Custom CLI coding agent"
 requires-python = ">=3.12"
-dependencies = []
+dependencies = ["httpx"]
 
 [project.scripts]
 lsimons-agent = "lsimons_agent.cli:main"
