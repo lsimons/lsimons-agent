@@ -4,12 +4,13 @@ import json
 from pathlib import Path
 
 from fastapi import FastAPI
-from fastapi.responses import HTMLResponse, StreamingResponse
+from fastapi.responses import FileResponse, HTMLResponse, StreamingResponse
 from lsimons_agent.agent import new_conversation, process_message
 
 app = FastAPI()
 
 TEMPLATES_DIR = Path(__file__).parent.parent.parent / "templates"
+STATIC_DIR = Path(__file__).parent.parent.parent / "static"
 
 # Single-user conversation state
 messages = new_conversation()
@@ -30,6 +31,12 @@ def event_stream(user_message: str):
 def index():
     """Serve the chat page."""
     return (TEMPLATES_DIR / "index.html").read_text()
+
+
+@app.get("/favicon.ico")
+def favicon():
+    """Serve the favicon."""
+    return FileResponse(STATIC_DIR / "favicon.ico", media_type="image/x-icon")
 
 
 @app.post("/chat")
