@@ -29,6 +29,9 @@ htmlcov/
 .DS_Store
 Thumbs.db
 
+# Test artifacts
+hello.py
+
 # Electron
 packages/lsimons-agent-electron/node_modules/
 packages/lsimons-agent-electron/dist/
