@@ -6,7 +6,7 @@ requires-python = ">=3.12"
 dependencies = ["httpx"]
 
 [project.scripts]
-lsimons-agent = "lsimons_agent.cli:main"
+lsimons-agent = "lsimons_agent.agent:run"
 
 [build-system]
 requires = ["hatchling"]

@@ -28,7 +28,7 @@ uv run pytest              # Run all tests
 
 Monorepo with uv workspaces:
 - `packages/lsimons-agent/` - Agent logic, CLI, tools, LLM client
-- `packages/lsimons-agent-web/` - FastAPI server with Jinja2+HTMX templates
+- `packages/lsimons-agent-web/` - FastAPI server with HTML template
 - `packages/mock-llm-server/` - Mock LLM for testing
 - `packages/lsimons-agent-electron/` - Desktop wrapper around web UI
 - `packages/lsimons-agent-e2e-tests/` - Playwright end-to-end tests

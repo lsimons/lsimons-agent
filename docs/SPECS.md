@@ -420,29 +420,12 @@ event: done
 data: {}
 ```
 
-### Templates
+### Template
 
-#### base.html
-```html
-<!DOCTYPE html>
-<html>
-<head>
-    <title>lsimons-agent</title>
-    <script src="https://unpkg.com/htmx.org@1.9"></script>
-    <script src="https://unpkg.com/htmx.org/dist/ext/sse.js"></script>
-    <style>
-        /* Dark mode styles */
-        body { background: #1a1a1a; color: #e0e0e0; font-family: monospace; }
-        /* ... */
-    </style>
-</head>
-<body>{% block content %}{% endblock %}</body>
-</html>
-```
-
-#### index.html
+Single `index.html` file containing:
+- Dark mode CSS styles
 - Message history container
-- Input form with HTMX POST to /chat
+- Input form with vanilla JS fetch() to /chat
 - SSE handling for streaming responses
 
 ---

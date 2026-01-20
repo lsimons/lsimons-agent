@@ -10,8 +10,7 @@ def test_templates_dir_exists():
     assert TEMPLATES_DIR.is_dir()
 
 
-def test_templates_has_required_files():
-    assert (TEMPLATES_DIR / "base.html").exists()
+def test_templates_has_index():
     assert (TEMPLATES_DIR / "index.html").exists()
 
 

@@ -1,11 +1,62 @@
-{% extends "base.html" %}
-
-{% block content %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>lsimons-agent</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            background: #1a1a1a;
+            color: #e0e0e0;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        .container { max-width: 800px; margin: 0 auto; }
+        h1 { color: #fff; font-size: 1.5em; margin-bottom: 20px; }
+        #messages {
+            border: 1px solid #333;
+            border-radius: 4px;
+            padding: 15px;
+            height: 60vh;
+            overflow-y: auto;
+            margin-bottom: 15px;
+            background: #111;
+        }
+        .message { margin-bottom: 15px; line-height: 1.5; }
+        .user { color: #6cf; }
+        .agent { color: #9f9; }
+        .tool { color: #fc6; font-size: 0.9em; }
+        #input-form { display: flex; gap: 10px; }
+        #message-input {
+            flex: 1;
+            background: #222;
+            border: 1px solid #333;
+            border-radius: 4px;
+            padding: 10px;
+            color: #e0e0e0;
+            font-family: inherit;
+            font-size: 1em;
+        }
+        #message-input:focus { outline: none; border-color: #6cf; }
+        button {
+            background: #333;
+            border: 1px solid #444;
+            border-radius: 4px;
+            padding: 10px 20px;
+            color: #e0e0e0;
+            cursor: pointer;
+            font-family: inherit;
+        }
+        button:hover { background: #444; }
+        #send-btn { background: #2a4a6a; }
+        #send-btn:hover { background: #3a5a7a; }
+    </style>
+</head>
+<body>
 <div class="container">
     <h1>lsimons-agent</h1>
-
     <div id="messages"></div>
-
     <form id="input-form" onsubmit="sendMessage(event)">
         <input type="text" id="message-input" placeholder="Type a message..." autofocus>
         <button type="submit" id="send-btn">Send</button>
@@ -31,9 +82,9 @@ function addTool(name, args) {
     const div = document.createElement('div');
     div.className = 'message tool';
     const argsStr = Object.entries(args)
-        .map(([k, v]) => `${k}=${JSON.stringify(v).substring(0, 50)}`)
+        .map(([k, v]) => k + '=' + JSON.stringify(v).substring(0, 50))
         .join(', ');
-    div.textContent = `[Tool: ${name}(${argsStr})]`;
+    div.textContent = '[Tool: ' + name + '(' + argsStr + ')]';
     messagesDiv.appendChild(div);
     messagesDiv.scrollTop = messagesDiv.scrollHeight;
 }
@@ -47,42 +98,35 @@ function sendMessage(event) {
     messageInput.value = '';
     currentAgentDiv = null;
 
-    const eventSource = new EventSource('/chat?' + new URLSearchParams({message}));
-
-    // POST with fetch, then handle SSE
     fetch('/chat', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({message})
-    }).then(response => {
+        body: JSON.stringify({message: message})
+    }).then(function(response) {
         const reader = response.body.getReader();
         const decoder = new TextDecoder();
         let buffer = '';
 
-        function processEvents(text) {
-            buffer += text;
-            const lines = buffer.split('\n');
-            buffer = lines.pop(); // Keep incomplete line in buffer
+        function processChunk() {
+            reader.read().then(function(result) {
+                if (result.done) return;
+                buffer += decoder.decode(result.value);
 
-            let eventType = null;
-            for (const line of lines) {
-                if (line.startsWith('event: ')) {
-                    eventType = line.substring(7);
-                } else if (line.startsWith('data: ')) {
-                    const data = JSON.parse(line.substring(6));
-                    handleEvent(eventType, data);
+                const lines = buffer.split('\n');
+                buffer = lines.pop();
+
+                let eventType = null;
+                for (const line of lines) {
+                    if (line.startsWith('event: ')) {
+                        eventType = line.substring(7);
+                    } else if (line.startsWith('data: ')) {
+                        handleEvent(eventType, JSON.parse(line.substring(6)));
+                    }
                 }
-            }
-        }
-
-        function read() {
-            reader.read().then(({done, value}) => {
-                if (done) return;
-                processEvents(decoder.decode(value));
-                read();
+                processChunk();
             });
         }
-        read();
+        processChunk();
     });
 }
 
@@ -95,19 +139,17 @@ function handleEvent(eventType, data) {
         }
     } else if (eventType === 'tool') {
         addTool(data.name, data.args);
-        currentAgentDiv = null; // Next text starts new message
+        currentAgentDiv = null;
     } else if (eventType === 'done') {
         currentAgentDiv = null;
     }
 }
 
 function clearChat() {
-    fetch('/clear', {method: 'POST'}).then(() => {
+    fetch('/clear', {method: 'POST'}).then(function() {
         messagesDiv.innerHTML = '';
     });
 }
-
-// Focus input on load
-messageInput.focus();
 </script>
-{% endblock %}
+</body>
+</html>

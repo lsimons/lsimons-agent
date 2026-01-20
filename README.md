@@ -39,15 +39,14 @@ lsimons-agent/
 │   ├── lsimons-agent/           # Core agent logic (python)
 │   │   ├── pyproject.toml
 │   │   └── src/lsimons_agent/
-│   │       ├── cli.py           # CLI entry point
 │   │       ├── agent.py         # Main agent loop + process_message()
 │   │       ├── tools.py         # Tool definitions (read, write, edit, bash)
 │   │       └── llm.py           # LLM client (OpenAI-compatible API)
-│   ├── lsimons-agent-web/       # FastAPI backend + HTMX frontend
+│   ├── lsimons-agent-web/       # FastAPI backend + HTML frontend
 │   │   ├── pyproject.toml
 │   │   ├── src/lsimons_agent_web/
 │   │   │   └── server.py        # FastAPI app (uses core agent)
-│   │   └── templates/           # Jinja2 + HTMX templates
+│   │   └── templates/           # HTML templates
 │   ├── mock-llm-server/         # Mock LLM server for testing
 │   │   ├── pyproject.toml
 │   │   ├── scenarios.json       # Canned responses
@@ -139,7 +138,6 @@ For testing, leave these unset to use defaults (mock server on localhost:8000).
 * **Python 3.12+** - Main language
 * **uv** - Package management and virtual environments
 * **FastAPI** - Web framework for the API
-* **Jinja2 + HTMX** - Server-side rendering with dynamic updates
 * **Electron** - Desktop app wrapper
 * **Playwright** - End-to-end testing
 * **pytest** - Python unit testing (no mocking frameworks)
