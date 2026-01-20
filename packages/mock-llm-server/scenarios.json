@@ -54,6 +54,6 @@
     }
   ],
   "default_response": {
-    "content": "I'm a mock server. I only understand specific test scenarios."
+    "content": "I'm a mock server. Try: 'hello world' (creates and runs a script) or 'how are you' (simple chat)."
   }
 }
