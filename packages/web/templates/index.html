@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <h1>lsimons-agent</h1>
+
+    <div id="messages"></div>
+
+    <form id="input-form" onsubmit="sendMessage(event)">
+        <input type="text" id="message-input" placeholder="Type a message..." autofocus>
+        <button type="submit" id="send-btn">Send</button>
+        <button type="button" onclick="clearChat()">Clear</button>
+    </form>
+</div>
+
+<script>
+const messagesDiv = document.getElementById('messages');
+const messageInput = document.getElementById('message-input');
+let currentAgentDiv = null;
+
+function addMessage(role, content) {
+    const div = document.createElement('div');
+    div.className = 'message ' + role;
+    div.textContent = (role === 'user' ? 'You: ' : 'Agent: ') + content;
+    messagesDiv.appendChild(div);
+    messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    return div;
+}
+
+function addTool(name, args) {
+    const div = document.createElement('div');
+    div.className = 'message tool';
+    const argsStr = Object.entries(args)
+        .map(([k, v]) => `${k}=${JSON.stringify(v).substring(0, 50)}`)
+        .join(', ');
+    div.textContent = `[Tool: ${name}(${argsStr})]`;
+    messagesDiv.appendChild(div);
+    messagesDiv.scrollTop = messagesDiv.scrollHeight;
+}
+
+function sendMessage(event) {
+    event.preventDefault();
+    const message = messageInput.value.trim();
+    if (!message) return;
+
+    addMessage('user', message);
+    messageInput.value = '';
+    currentAgentDiv = null;
+
+    const eventSource = new EventSource('/chat?' + new URLSearchParams({message}));
+
+    // POST with fetch, then handle SSE
+    fetch('/chat', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({message})
+    }).then(response => {
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+
+        function processEvents(text) {
+            buffer += text;
+            const lines = buffer.split('\n');
+            buffer = lines.pop(); // Keep incomplete line in buffer
+
+            let eventType = null;
+            for (const line of lines) {
+                if (line.startsWith('event: ')) {
+                    eventType = line.substring(7);
+                } else if (line.startsWith('data: ')) {
+                    const data = JSON.parse(line.substring(6));
+                    handleEvent(eventType, data);
+                }
+            }
+        }
+
+        function read() {
+            reader.read().then(({done, value}) => {
+                if (done) return;
+                processEvents(decoder.decode(value));
+                read();
+            });
+        }
+        read();
+    });
+}
+
+function handleEvent(eventType, data) {
+    if (eventType === 'text') {
+        if (currentAgentDiv) {
+            currentAgentDiv.textContent += data.content;
+        } else {
+            currentAgentDiv = addMessage('agent', data.content);
+        }
+    } else if (eventType === 'tool') {
+        addTool(data.name, data.args);
+        currentAgentDiv = null; // Next text starts new message
+    } else if (eventType === 'done') {
+        currentAgentDiv = null;
+    }
+}
+
+function clearChat() {
+    fetch('/clear', {method: 'POST'}).then(() => {
+        messagesDiv.innerHTML = '';
+    });
+}
+
+// Focus input on load
+messageInput.focus();
+</script>
+{% endblock %}

@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>lsimons-agent</title>
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <script src="https://unpkg.com/htmx-ext-sse@2.0.0/sse.js"></script>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            background: #1a1a1a;
+            color: #e0e0e0;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: #fff;
+            font-size: 1.5em;
+            margin-bottom: 20px;
+        }
+        #messages {
+            border: 1px solid #333;
+            border-radius: 4px;
+            padding: 15px;
+            height: 60vh;
+            overflow-y: auto;
+            margin-bottom: 15px;
+            background: #111;
+        }
+        .message {
+            margin-bottom: 15px;
+            line-height: 1.5;
+        }
+        .user { color: #6cf; }
+        .agent { color: #9f9; }
+        .tool { color: #fc6; font-size: 0.9em; }
+        #input-form {
+            display: flex;
+            gap: 10px;
+        }
+        #message-input {
+            flex: 1;
+            background: #222;
+            border: 1px solid #333;
+            border-radius: 4px;
+            padding: 10px;
+            color: #e0e0e0;
+            font-family: inherit;
+            font-size: 1em;
+        }
+        #message-input:focus {
+            outline: none;
+            border-color: #6cf;
+        }
+        button {
+            background: #333;
+            border: 1px solid #444;
+            border-radius: 4px;
+            padding: 10px 20px;
+            color: #e0e0e0;
+            cursor: pointer;
+            font-family: inherit;
+        }
+        button:hover { background: #444; }
+        #send-btn { background: #2a4a6a; }
+        #send-btn:hover { background: #3a5a7a; }
+    </style>
+</head>
+<body>
+    {% block content %}{% endblock %}
+</body>
+</html>

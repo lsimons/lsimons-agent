@@ -4,6 +4,9 @@ version = "0.1.0"
 description = "Custom CLI coding agent workspace"
 requires-python = ">=3.12"
 
+[dependency-groups]
+dev = ["ruff", "pytest"]
+
 [tool.uv.workspace]
 members = ["packages/*"]
 
