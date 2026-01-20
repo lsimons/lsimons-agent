@@ -17,10 +17,8 @@ module.exports = defineConfig({
         {
             name: 'electron',
             testMatch: 'electron.spec.js',
-            // No baseURL - electron tests launch their own app
         },
     ],
-    // Web server config for web tests only
     webServer: [
         {
             command: 'uv run mock-llm-server',

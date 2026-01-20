@@ -3,6 +3,8 @@ const { test, expect } = require('@playwright/test');
 test.describe('Chat Interface', () => {
     test.beforeEach(async ({ page }) => {
         await page.goto('/');
+        // Clear conversation state before each test
+        await page.click('button:has-text("Clear")');
     });
 
     test('page loads with title', async ({ page }) => {
@@ -21,9 +23,6 @@ test.describe('Chat Interface', () => {
     });
 
     test('hello world scenario with tool calls', async ({ page }) => {
-        // Clear any previous state
-        await page.click('button:has-text("Clear")');
-
         // Type hello world message
         await page.fill('#message-input', 'hello world');
         await page.click('#send-btn');

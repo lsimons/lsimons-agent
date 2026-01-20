@@ -9,37 +9,49 @@ let mainWindow = null;
 const SERVER_URL = 'http://localhost:8765';
 const PROJECT_ROOT = path.join(__dirname, '..', '..');
 
+function checkServer(url) {
+    return new Promise((resolve) => {
+        http.get(url, (res) => {
+            resolve(res.statusCode === 200);
+        }).on('error', () => {
+            resolve(false);
+        });
+    });
+}
+
 function waitForServer(url, timeout = 30000) {
     return new Promise((resolve, reject) => {
         const startTime = Date.now();
 
         function check() {
-            http.get(url, (res) => {
-                if (res.statusCode === 200) {
+            checkServer(url).then((ready) => {
+                if (ready) {
                     resolve();
+                } else if (Date.now() - startTime > timeout) {
+                    reject(new Error('Server start timeout'));
                 } else {
-                    retry();
+                    setTimeout(check, 500);
                 }
-            }).on('error', retry);
-        }
-
-        function retry() {
-            if (Date.now() - startTime > timeout) {
-                reject(new Error('Server start timeout'));
-            } else {
-                setTimeout(check, 500);
-            }
+            });
         }
 
         check();
     });
 }
 
-function startServer() {
+async function startServer() {
+    // Check if server is already running (e.g., from playwright)
+    const alreadyRunning = await checkServer(SERVER_URL);
+    if (alreadyRunning) {
+        console.log('Web server already running');
+        return;
+    }
+
     console.log('Starting web server...');
     serverProcess = spawn('uv', ['run', 'lsimons-agent-web'], {
         cwd: PROJECT_ROOT,
-        stdio: ['ignore', 'pipe', 'pipe']
+        stdio: ['ignore', 'pipe', 'pipe'],
+        shell: true
     });
 
     serverProcess.stdout.on('data', (data) => {

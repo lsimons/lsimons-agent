@@ -1,7 +1,11 @@
 const { test, expect, _electron: electron } = require('@playwright/test');
 const path = require('path');
 
-// Skip if running in CI without display
+// Get electron executable path from the electron package
+const electronPath = require.resolve('electron');
+const electronDir = path.dirname(electronPath);
+const electronBin = path.join(electronDir, 'cli.js');
+
 test.describe('Electron App', () => {
     let electronApp;
     let page;
@@ -11,6 +15,10 @@ test.describe('Electron App', () => {
         electronApp = await electron.launch({
             args: [path.join(__dirname, '../../electron/main.js')],
             cwd: path.join(__dirname, '../../electron'),
+            env: {
+                ...process.env,
+                NODE_ENV: 'test',
+            },
         });
 
         // Wait for the first window

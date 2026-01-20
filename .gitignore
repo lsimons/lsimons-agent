@@ -32,3 +32,10 @@ Thumbs.db
 # Electron
 packages/electron/node_modules/
 packages/electron/dist/
+packages/electron/package-lock.json
+
+# E2E Tests
+packages/e2e-tests/node_modules/
+packages/e2e-tests/test-results/
+packages/e2e-tests/package-lock.json
+packages/e2e-tests/playwright-report/
