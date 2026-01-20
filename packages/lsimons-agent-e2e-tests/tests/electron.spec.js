@@ -13,8 +13,8 @@ test.describe('Electron App', () => {
     test.beforeAll(async () => {
         // Launch Electron app
         electronApp = await electron.launch({
-            args: [path.join(__dirname, '../../electron/main.js')],
-            cwd: path.join(__dirname, '../../electron'),
+            args: [path.join(__dirname, '../../lsimons-agent-electron/main.js')],
+            cwd: path.join(__dirname, '../../lsimons-agent-electron'),
             env: {
                 ...process.env,
                 NODE_ENV: 'test',

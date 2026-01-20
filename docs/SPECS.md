@@ -133,7 +133,7 @@ Matching logic:
 
 ### Scenarios File
 
-`packages/mock-llm/scenarios.json`:
+`packages/mock-llm-server/scenarios.json`:
 ```json
 {
   "scenarios": [
