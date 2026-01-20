@@ -1,0 +1,14 @@
+{
+  "name": "lsimons-agent-e2e-tests",
+  "version": "0.1.0",
+  "description": "End-to-end tests for lsimons-agent using Playwright",
+  "scripts": {
+    "test": "playwright test",
+    "test:web": "playwright test --project=web",
+    "test:electron": "playwright test --project=electron",
+    "test:headed": "playwright test --headed"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.40.0"
+  }
+}

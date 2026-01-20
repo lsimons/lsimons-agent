@@ -42,27 +42,34 @@ lsimons-agent/
 │   │       └── lsimons_agent/
 │   │           ├── __init__.py
 │   │           ├── cli.py          # CLI entry point
-│   │           ├── agent.py        # Main agent loop
+│   │           ├── agent.py        # Main agent loop + process_message()
 │   │           ├── tools.py        # Tool definitions (read, write, edit, bash)
 │   │           └── llm.py          # LLM client (OpenAI-compatible API)
 │   ├── web/               # FastAPI backend + HTMX frontend
 │   │   ├── pyproject.toml
-│   │   └── src/
-│   │       └── lsimons_agent_web/
-│   │           ├── __init__.py
-│   │           ├── server.py       # FastAPI app
-│   │           ├── routes.py       # API routes
-│   │           └── templates/      # Jinja2 + HTMX templates
+│   │   ├── src/
+│   │   │   └── lsimons_agent_web/
+│   │   │       ├── __init__.py
+│   │   │       └── server.py       # FastAPI app (uses core agent)
+│   │   └── templates/             # Jinja2 + HTMX templates
+│   │       ├── base.html
+│   │       └── index.html
 │   ├── mock-llm/          # Mock LLM server for testing
 │   │   ├── pyproject.toml
 │   │   ├── scenarios.json # Canned responses
 │   │   └── src/
 │   │       └── mock_llm/
 │   │           └── server.py
-│   └── electron/          # Electron wrapper
+│   ├── electron/          # Electron wrapper
+│   │   ├── package.json
+│   │   └── main.js
+│   └── e2e-tests/         # Playwright end-to-end tests
 │       ├── package.json
-│       └── main.js
-├── tests/                 # Simple unit tests
+│       ├── playwright.config.js
+│       └── tests/
+│           ├── chat.spec.js      # Web UI tests
+│           └── electron.spec.js  # Electron app tests
+├── tests/                 # Python unit tests
 ├── pyproject.toml         # Root project config (uv workspace)
 └── README.md
 ```
@@ -74,7 +81,7 @@ lsimons-agent/
 curl -LsSf https://astral.sh/uv/install.sh | sh
 
 # Create virtual environment and install dependencies
-uv sync
+uv sync --all-packages
 
 # Run the CLI
 uv run lsimons-agent
@@ -85,8 +92,43 @@ uv run lsimons-agent-web
 # Run mock LLM server (for testing)
 uv run mock-llm-server
 
-# Run tests
+# Run Python tests
 uv run pytest
+```
+
+## Playwright E2E Tests
+
+The e2e tests use Playwright to test the full stack:
+- `chat.spec.js` - Tests the web UI against mock server
+- `electron.spec.js` - Tests the Electron app (launches electron, which starts web server)
+
+```bash
+# Install Playwright and dependencies
+cd packages/e2e-tests
+npm install
+npx playwright install
+
+# Run web UI tests (auto-starts mock-llm and web servers)
+npm run test:web
+
+# Run Electron tests (requires electron package to be set up)
+cd ../electron && npm install && cd ../e2e-tests
+npm run test:electron
+
+# Run all tests
+npm test
+
+# Run tests in headed mode (see the browser)
+npm run test:headed
+```
+
+### Test Flow
+
+```
+Playwright → Electron → Web Server → Core Agent → Mock LLM
+     ↓          ↓           ↓            ↓           ↓
+  browser    desktop     FastAPI    process_message  canned
+  tests       app         SSE        + tools       responses
 ```
 
 ## Environment Variables
@@ -100,6 +142,8 @@ LLM_DEFAULT_MODEL=azure/gpt-5-1
 LLM_SMALL_FAST_MODEL=azure/gpt-5-mini
 ```
 
+For testing, leave these unset to use defaults (mock server on localhost:8000).
+
 ## Tech Stack
 
 * **Python 3.12+** - Main language
@@ -107,7 +151,8 @@ LLM_SMALL_FAST_MODEL=azure/gpt-5-mini
 * **FastAPI** - Web framework for the API
 * **Jinja2 + HTMX** - Server-side rendering with dynamic updates
 * **Electron** - Desktop app wrapper
-* **pytest** - Testing (no mocking frameworks)
+* **Playwright** - End-to-end testing
+* **pytest** - Python unit testing (no mocking frameworks)
 
 ## Design Principles
 

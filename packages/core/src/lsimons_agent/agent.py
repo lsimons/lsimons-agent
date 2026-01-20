@@ -15,9 +15,62 @@ enough context to make the match unique.
 Be concise. Execute tasks directly without asking for confirmation."""
 
 
+def process_message(messages: list[dict], user_message: str):
+    """
+    Process a user message and yield events.
+
+    Yields tuples of (event_type, data):
+    - ("text", content) - Agent text response
+    - ("tool", {"name": name, "args": args}) - Tool being executed
+    - ("done", None) - Processing complete
+
+    Modifies messages list in place.
+    """
+    messages.append({"role": "user", "content": user_message})
+
+    while True:
+        response = chat(messages, tools=TOOLS)
+        message = response["choices"][0]["message"]
+        content = message.get("content", "")
+        tool_calls = message.get("tool_calls", [])
+
+        if content:
+            yield ("text", content)
+
+        if not tool_calls:
+            messages.append(message)
+            break
+
+        messages.append(message)
+        for tool_call in tool_calls:
+            fn = tool_call["function"]
+            name = fn["name"]
+            args = json.loads(fn["arguments"])
+
+            yield ("tool", {"name": name, "args": args})
+
+            try:
+                result = execute(name, args)
+            except Exception as e:
+                result = f"Error: {e}"
+
+            messages.append({
+                "role": "tool",
+                "tool_call_id": tool_call["id"],
+                "content": result,
+            })
+
+    yield ("done", None)
+
+
+def new_conversation() -> list[dict]:
+    """Create a new conversation with system prompt."""
+    return [{"role": "system", "content": SYSTEM_PROMPT}]
+
+
 def run():
-    """Run the interactive agent loop."""
-    messages = [{"role": "system", "content": SYSTEM_PROMPT}]
+    """Run the interactive CLI agent loop."""
+    messages = new_conversation()
 
     print("lsimons-agent")
     print("-" * 40)
@@ -35,52 +88,21 @@ def run():
             continue
 
         if user_input == "/clear":
-            messages = [messages[0]]  # Keep system prompt
+            messages = new_conversation()
             print("Cleared.")
             continue
 
         if user_input.startswith("!"):
-            # Direct bash execution
             print(bash(user_input[1:]))
             continue
 
-        messages.append({"role": "user", "content": user_input})
-
-        # Agent loop: call LLM, execute tools, repeat until done
-        while True:
-            response = chat(messages, tools=TOOLS)
-            message = response["choices"][0]["message"]
-            content = message.get("content", "")
-            tool_calls = message.get("tool_calls", [])
-
-            if content:
+        for event_type, data in process_message(messages, user_input):
+            if event_type == "text":
+                print(f"\nAgent: {data}")
+            elif event_type == "tool":
+                print(f"[Tool: {data['name']}({_format_args(data['args'])})]")
+            elif event_type == "done":
                 print()
-                print(f"Agent: {content}")
-
-            if not tool_calls:
-                messages.append(message)
-                print()
-                break
-
-            # Execute tools
-            messages.append(message)
-            for tool_call in tool_calls:
-                fn = tool_call["function"]
-                name = fn["name"]
-                args = json.loads(fn["arguments"])
-
-                print(f"[Tool: {name}({_format_args(args)})]")
-
-                try:
-                    result = execute(name, args)
-                except Exception as e:
-                    result = f"Error: {e}"
-
-                messages.append({
-                    "role": "tool",
-                    "tool_call_id": tool_call["id"],
-                    "content": result,
-                })
 
 
 def _format_args(args: dict) -> str:
