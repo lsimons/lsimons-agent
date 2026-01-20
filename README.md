@@ -43,8 +43,8 @@ lsimons-agent/
 │   │           ├── __init__.py
 │   │           ├── cli.py          # CLI entry point
 │   │           ├── agent.py        # Main agent loop
-│   │           ├── tools.py        # Tool definitions (file read/write, bash, etc)
-│   │           └── anthropic.py    # Anthropic API client wrapper
+│   │           ├── tools.py        # Tool definitions (read, write, edit, bash)
+│   │           └── llm.py          # LLM client (OpenAI-compatible API)
 │   ├── web/               # FastAPI backend + HTMX frontend
 │   │   ├── pyproject.toml
 │   │   └── src/
@@ -82,10 +82,13 @@ uv run pytest
 
 ## Environment Variables
 
-Get these from 1password and set them:
+Get `LLM_AUTH_TOKEN` from 1password:
 
 ```bash
-ANTHROPIC_API_KEY=sk-ant-...
+LLM_AUTH_TOKEN=sk-...          # From 1password
+LLM_BASE_URL=https://litellm.sbp.ai
+LLM_DEFAULT_MODEL=azure/gpt-5-1
+LLM_SMALL_FAST_MODEL=azure/gpt-5-mini
 ```
 
 ## Tech Stack
@@ -104,3 +107,8 @@ ANTHROPIC_API_KEY=sk-ant-...
 3. **No abstractions until needed** - Start concrete, abstract later if patterns emerge
 4. **Synchronous by default** - Async adds complexity, avoid unless necessary
 5. **Fail fast** - Simple error handling, let exceptions propagate
+
+## Documentation
+
+* [Implementation Plan](docs/IMPLEMENTATION_PLAN.md) - Phased build approach
+* [Specifications](docs/SPECS.md) - Detailed feature specs for CLI, tools, web, and electron
