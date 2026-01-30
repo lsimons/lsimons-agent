@@ -29,13 +29,16 @@ htmlcov/
 .DS_Store
 Thumbs.db
 
+# Test artifacts
+hello.py
+
 # Electron
-packages/electron/node_modules/
-packages/electron/dist/
-packages/electron/package-lock.json
+packages/lsimons-agent-electron/node_modules/
+packages/lsimons-agent-electron/dist/
+packages/lsimons-agent-electron/package-lock.json
 
 # E2E Tests
-packages/e2e-tests/node_modules/
-packages/e2e-tests/test-results/
-packages/e2e-tests/package-lock.json
-packages/e2e-tests/playwright-report/
+packages/lsimons-agent-e2e-tests/node_modules/
+packages/lsimons-agent-e2e-tests/test-results/
+packages/lsimons-agent-e2e-tests/package-lock.json
+packages/lsimons-agent-e2e-tests/playwright-report/

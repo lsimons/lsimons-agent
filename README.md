@@ -36,41 +36,30 @@ Things I don't want or need:
 ```
 lsimons-agent/
 ├── packages/
-│   ├── core/              # Core agent logic (python)
+│   ├── lsimons-agent/           # Core agent logic (python)
 │   │   ├── pyproject.toml
-│   │   └── src/
-│   │       └── lsimons_agent/
-│   │           ├── __init__.py
-│   │           ├── cli.py          # CLI entry point
-│   │           ├── agent.py        # Main agent loop + process_message()
-│   │           ├── tools.py        # Tool definitions (read, write, edit, bash)
-│   │           └── llm.py          # LLM client (OpenAI-compatible API)
-│   ├── web/               # FastAPI backend + HTMX frontend
+│   │   └── src/lsimons_agent/
+│   │       ├── agent.py         # Main agent loop + process_message()
+│   │       ├── tools.py         # Tool definitions (read, write, edit, bash)
+│   │       └── llm.py           # LLM client (OpenAI-compatible API)
+│   ├── lsimons-agent-web/       # FastAPI backend + HTML frontend
 │   │   ├── pyproject.toml
-│   │   ├── src/
-│   │   │   └── lsimons_agent_web/
-│   │   │       ├── __init__.py
-│   │   │       └── server.py       # FastAPI app (uses core agent)
-│   │   └── templates/             # Jinja2 + HTMX templates
-│   │       ├── base.html
-│   │       └── index.html
-│   ├── mock-llm/          # Mock LLM server for testing
+│   │   ├── src/lsimons_agent_web/
+│   │   │   └── server.py        # FastAPI app (uses core agent)
+│   │   └── templates/           # HTML templates
+│   ├── mock-llm-server/         # Mock LLM server for testing
 │   │   ├── pyproject.toml
-│   │   ├── scenarios.json # Canned responses
-│   │   └── src/
-│   │       └── mock_llm/
-│   │           └── server.py
-│   ├── electron/          # Electron wrapper
+│   │   ├── scenarios.json       # Canned responses
+│   │   └── src/mock_llm/
+│   │       └── server.py
+│   ├── lsimons-agent-electron/  # Electron wrapper
 │   │   ├── package.json
 │   │   └── main.js
-│   └── e2e-tests/         # Playwright end-to-end tests
+│   └── lsimons-agent-e2e-tests/ # Playwright end-to-end tests
 │       ├── package.json
 │       ├── playwright.config.js
 │       └── tests/
-│           ├── chat.spec.js      # Web UI tests
-│           └── electron.spec.js  # Electron app tests
-├── tests/                 # Python unit tests
-├── pyproject.toml         # Root project config (uv workspace)
+├── pyproject.toml               # Root project config (uv workspace)
 └── README.md
 ```
 
@@ -104,7 +93,7 @@ The e2e tests use Playwright to test the full stack:
 
 ```bash
 # Install Playwright and dependencies
-cd packages/e2e-tests
+cd packages/lsimons-agent-e2e-tests
 npm install
 npx playwright install
 
@@ -112,7 +101,7 @@ npx playwright install
 npm run test:web
 
 # Run Electron tests (requires electron package to be set up)
-cd ../electron && npm install && cd ../e2e-tests
+cd ../lsimons-agent-electron && npm install && cd ../lsimons-agent-e2e-tests
 npm run test:electron
 
 # Run all tests
@@ -149,7 +138,6 @@ For testing, leave these unset to use defaults (mock server on localhost:8000).
 * **Python 3.12+** - Main language
 * **uv** - Package management and virtual environments
 * **FastAPI** - Web framework for the API
-* **Jinja2 + HTMX** - Server-side rendering with dynamic updates
 * **Electron** - Desktop app wrapper
 * **Playwright** - End-to-end testing
 * **pytest** - Python unit testing (no mocking frameworks)
@@ -207,5 +195,10 @@ Optional longer description if needed.
 
 ## Documentation
 
-* [Implementation Plan](docs/IMPLEMENTATION_PLAN.md) - Phased build approach
 * [Specifications](docs/SPECS.md) - Detailed feature specs for CLI, tools, web, and electron
+
+## Future Ideas
+
+- Conversation persistence
+- Syntax highlighting
+- Token usage display

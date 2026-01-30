@@ -8,7 +8,7 @@ requires-python = ">=3.12"
 dev = ["ruff", "pytest"]
 
 [tool.uv.workspace]
-members = ["packages/core", "packages/mock-llm", "packages/web"]
+members = ["packages/lsimons-agent", "packages/mock-llm-server", "packages/lsimons-agent-web"]
 
 [tool.ruff]
 line-length = 100
@@ -18,4 +18,4 @@ target-version = "py312"
 select = ["E", "F", "I", "W"]
 
 [tool.pytest.ini_options]
-testpaths = ["tests"]
+testpaths = ["packages/lsimons-agent/tests", "packages/lsimons-agent-web/tests"]

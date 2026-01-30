@@ -16,12 +16,13 @@ Core principle: Keep it simple. When the agent does something wrong, improve the
 
 ### Invocation
 ```bash
-uv run lsimons-agent [--web]
+uv run lsimons-agent      # CLI only
+uv run lsimons-agent-web  # Web server on localhost:8765
 ```
 
 ### Behavior
-- No arguments: Start interactive REPL mode
-- `--web`: Also start web server on localhost:8765
+- `lsimons-agent`: Start interactive REPL mode
+- `lsimons-agent-web`: Start web server with chat UI
 
 ### REPL Commands
 - Type message + Enter: Send to agent
@@ -132,7 +133,7 @@ Matching logic:
 
 ### Scenarios File
 
-`packages/mock-llm/scenarios.json`:
+`packages/mock-llm-server/scenarios.json`:
 ```json
 {
   "scenarios": [
@@ -219,10 +220,10 @@ Returns standard OpenAI chat completion format:
 
 ### State Tracking
 
-The mock server tracks conversation state to return multi-step responses:
+The mock server determines the current step by counting tool result messages:
 - Each scenario has multiple `steps`
-- Server tracks which step each conversation is on (by session or message count)
-- Sequential calls return the next step in the scenario
+- Step index = count of `role: "tool"` messages in conversation
+- No server-side state needed - purely based on message history
 
 ---
 
@@ -399,6 +400,9 @@ Serves the main chat page (index.html template).
 #### POST /chat
 Send a message and receive streamed response.
 
+#### POST /clear
+Reset conversation history. Returns `{"status": "ok"}`.
+
 Request:
 ```json
 {"message": "string"}
@@ -416,29 +420,12 @@ event: done
 data: {}
 ```
 
-### Templates
+### Template
 
-#### base.html
-```html
-<!DOCTYPE html>
-<html>
-<head>
-    <title>lsimons-agent</title>
-    <script src="https://unpkg.com/htmx.org@1.9"></script>
-    <script src="https://unpkg.com/htmx.org/dist/ext/sse.js"></script>
-    <style>
-        /* Dark mode styles */
-        body { background: #1a1a1a; color: #e0e0e0; font-family: monospace; }
-        /* ... */
-    </style>
-</head>
-<body>{% block content %}{% endblock %}</body>
-</html>
-```
-
-#### index.html
+Single `index.html` file containing:
+- Dark mode CSS styles
 - Message history container
-- Input form with HTMX POST to /chat
+- Input form with vanilla JS fetch() to /chat
 - SSE handling for streaming responses
 
 ---
