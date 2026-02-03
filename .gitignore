@@ -36,6 +36,12 @@ hello.py
 packages/lsimons-agent-electron/node_modules/
 packages/lsimons-agent-electron/dist/
 packages/lsimons-agent-electron/package-lock.json
+packages/lsimons-agent-electron/build/
+
+# PyInstaller
+packages/lsimons-agent-web/dist/
+packages/lsimons-agent-web/build/
+*.spec.bak
 
 # E2E Tests
 packages/lsimons-agent-e2e-tests/node_modules/

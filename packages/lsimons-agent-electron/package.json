@@ -5,7 +5,17 @@
   "main": "main.js",
   "scripts": {
     "start": "electron .",
-    "build": "electron-builder"
+    "build:icons": "cd ../.. && uv run python scripts/build_icons.py",
+    "build:backend": "cd ../.. && uv run python scripts/build_backend.py",
+    "build:mac": "npm run build:icons && npm run build:backend && electron-builder --mac",
+    "build:win": "npm run build:icons && npm run build:backend && electron-builder --win",
+    "build:linux": "npm run build:icons && npm run build:backend && electron-builder --linux",
+    "build": "npm run build:icons && npm run build:backend && electron-builder",
+    "build:linux:docker": "docker run --rm -v \"$(cd ../.. && pwd):/project\" -w /project/packages/lsimons-agent-electron lsimons-agent-builder bash -c \"cd ../.. && uv sync && cd packages/lsimons-agent-electron && npm ci && npm run build:linux\"",
+    "build:win:docker": "docker run --rm -v \"$(cd ../.. && pwd):/project\" -w /project/packages/lsimons-agent-electron lsimons-agent-builder bash -c \"cd ../.. && uv sync && cd packages/lsimons-agent-electron && npm ci && npm run build:win\""
+  },
+  "dependencies": {
+    "electron-updater": "^6.1.0"
   },
   "devDependencies": {
     "electron": "^28.0.0",

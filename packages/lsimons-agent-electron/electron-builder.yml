@@ -1,0 +1,40 @@
+appId: com.lsimons.agent
+productName: lsimons-agent
+directories:
+  output: dist
+  buildResources: build
+
+# Auto-update via GitHub Releases
+publish:
+  provider: github
+  owner: lsimons
+  repo: lsimons-agent
+
+# Include PyInstaller-built backend
+extraFiles:
+  - from: "../lsimons-agent-web/dist/lsimons-agent-web"
+    to: "backend"
+    filter:
+      - "**/*"
+
+mac:
+  category: public.app-category.developer-tools
+  target:
+    - dmg
+    - zip  # Required for auto-update on Mac
+  icon: build/icon.icns
+
+win:
+  target:
+    - nsis
+  icon: build/icon.ico
+
+linux:
+  target:
+    - AppImage
+  icon: build/icon.png
+  category: Development
+
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true

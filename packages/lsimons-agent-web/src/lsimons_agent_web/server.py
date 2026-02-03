@@ -1,6 +1,7 @@
 """Web server for lsimons-agent."""
 
 import json
+import sys
 from pathlib import Path
 
 from fastapi import FastAPI
@@ -9,8 +10,18 @@ from lsimons_agent.agent import new_conversation, process_message
 
 app = FastAPI()
 
-TEMPLATES_DIR = Path(__file__).parent.parent.parent / "templates"
-STATIC_DIR = Path(__file__).parent.parent.parent / "static"
+
+def get_resource_path(relative_path: str) -> Path:
+    """Get path to resource, handling PyInstaller bundled mode."""
+    if getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
+        # Running in PyInstaller bundle
+        return Path(sys._MEIPASS) / relative_path
+    # Running in normal Python environment
+    return Path(__file__).parent.parent.parent / relative_path
+
+
+TEMPLATES_DIR = get_resource_path("templates")
+STATIC_DIR = get_resource_path("static")
 
 # Single-user conversation state
 messages = new_conversation()
