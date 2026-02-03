@@ -10,11 +10,8 @@ publish:
   owner: lsimons
   repo: lsimons-agent
 
-# Include PyInstaller-built backend (single executable)
-# extraResources puts files in Contents/Resources/ (accessible via process.resourcesPath)
-extraResources:
-  - from: "../lsimons-agent-web/dist/lsimons-agent-web"
-    to: "backend/lsimons-agent-web"
+# Backend is bundled per-platform (PyInstaller outputs different names)
+# extraResources puts files in Resources/ (accessible via process.resourcesPath)
 
 mac:
   category: public.app-category.developer-tools
@@ -22,17 +19,26 @@ mac:
     - dmg
     - zip  # Required for auto-update on Mac
   icon: build/icon.icns
+  extraResources:
+    - from: "../lsimons-agent-web/dist/lsimons-agent-web"
+      to: "backend/lsimons-agent-web"
 
 win:
   target:
     - nsis
   icon: build/icon.ico
+  extraResources:
+    - from: "../lsimons-agent-web/dist/lsimons-agent-web.exe"
+      to: "backend/lsimons-agent-web.exe"
 
 linux:
   target:
     - AppImage
   icon: build/icon.png
   category: Development
+  extraResources:
+    - from: "../lsimons-agent-web/dist/lsimons-agent-web"
+      to: "backend/lsimons-agent-web"
 
 nsis:
   oneClick: false
