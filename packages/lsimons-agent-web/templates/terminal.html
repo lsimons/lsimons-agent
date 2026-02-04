@@ -53,6 +53,64 @@
             color: #666;
             margin-top: 2px;
         }
+        .project-section {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .project-select {
+            padding: 6px 12px;
+            font-size: 0.85em;
+            font-family: inherit;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 4px;
+            color: #e0e0e0;
+            cursor: pointer;
+            min-width: 200px;
+        }
+        .project-select:focus {
+            outline: none;
+            border-color: rgba(0,212,255,0.5);
+        }
+        .project-select optgroup {
+            background: #1a1a2e;
+            color: #888;
+        }
+        .project-select option {
+            background: #1a1a2e;
+            color: #e0e0e0;
+        }
+        .icon-btn {
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 4px;
+            color: #888;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 1em;
+        }
+        .icon-btn:hover {
+            background: rgba(255,255,255,0.1);
+            color: #fff;
+            border-color: rgba(255,255,255,0.3);
+        }
+        .icon-btn.sync:hover {
+            color: #50fa7b;
+            border-color: rgba(80,250,123,0.5);
+        }
+        .icon-btn.spinning {
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
         .status {
             display: flex;
             align-items: center;
@@ -114,6 +172,43 @@
         .pane-icon {
             font-size: 1.1em;
         }
+        .pane-title {
+            flex: 1;
+        }
+        .agent-buttons {
+            display: flex;
+            gap: 6px;
+        }
+        .agent-btn {
+            padding: 4px 10px;
+            font-size: 0.75em;
+            font-weight: bold;
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 4px;
+            background: rgba(255,255,255,0.05);
+            color: #888;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .agent-btn:hover {
+            background: rgba(255,255,255,0.1);
+            color: #fff;
+        }
+        .agent-btn.active {
+            background: rgba(0,212,255,0.2);
+            border-color: rgba(0,212,255,0.5);
+            color: #00d4ff;
+        }
+        .agent-btn.lsimons { --btn-color: #00d4ff; }
+        .agent-btn.claude { --btn-color: #cc785c; }
+        .agent-btn.pi { --btn-color: #f5a623; }
+        .agent-btn.gemini { --btn-color: #4285f4; }
+        .agent-btn.github { --btn-color: #238636; }
+        .agent-btn.active.lsimons { background: rgba(0,212,255,0.2); border-color: rgba(0,212,255,0.5); color: #00d4ff; }
+        .agent-btn.active.claude { background: rgba(204,120,92,0.2); border-color: rgba(204,120,92,0.5); color: #cc785c; }
+        .agent-btn.active.pi { background: rgba(245,166,35,0.2); border-color: rgba(245,166,35,0.5); color: #f5a623; }
+        .agent-btn.active.gemini { background: rgba(66,133,244,0.2); border-color: rgba(66,133,244,0.5); color: #4285f4; }
+        .agent-btn.active.github { background: rgba(35,134,54,0.2); border-color: rgba(35,134,54,0.5); color: #238636; }
         .terminal-content {
             flex: 1;
             padding: 8px;
@@ -130,7 +225,14 @@
         <img src="/logo.png" alt="Logo" class="logo">
         <div class="title-section">
             <div class="title">lsimons-agent</div>
-            <div class="subtitle">AI-powered coding assistant</div>
+            <div class="subtitle">AI-powered coding assistants</div>
+        </div>
+        <div class="project-section">
+            <select class="project-select" id="project-select" onchange="switchProject()">
+                <option value="">Loading...</option>
+            </select>
+            <button class="icon-btn" onclick="refreshRepos()" title="Refresh repos">&#x21bb;</button>
+            <button class="icon-btn sync" onclick="syncRepos()" title="Sync repos">&#x27F3;</button>
         </div>
         <div class="status">
             <div class="status-dot"></div>
@@ -141,14 +243,21 @@
         <div class="terminal-pane agent">
             <div class="pane-header">
                 <span class="pane-icon">&#x1F916;</span>
-                <span>Agent</span>
+                <span class="pane-title">Agent</span>
+                <div class="agent-buttons">
+                    <button class="agent-btn lsimons active" onclick="switchAgent('lsimons')">lsimons</button>
+                    <button class="agent-btn claude" onclick="switchAgent('claude')">claude</button>
+                    <button class="agent-btn github" onclick="switchAgent('github')">github</button>
+                    <button class="agent-btn gemini" onclick="switchAgent('gemini')">gemini</button>
+                    <button class="agent-btn pi" onclick="switchAgent('pi')">pi</button>
+                </div>
             </div>
             <div class="terminal-content" id="terminal-agent"></div>
         </div>
         <div class="terminal-pane shell">
             <div class="pane-header">
                 <span class="pane-icon">&#x1F4BB;</span>
-                <span>Shell</span>
+                <span class="pane-title">Shell</span>
             </div>
             <div class="terminal-content" id="terminal-shell"></div>
         </div>
@@ -158,7 +267,15 @@
 <script src="https://cdn.jsdelivr.net/npm/@xterm/xterm@5.5.0/lib/xterm.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@xterm/addon-fit@0.10.0/lib/addon-fit.js"></script>
 <script>
+let agentTerminal = null;
+let shellTerminal = null;
+let currentAgent = 'lsimons';
+let currentProject = '';
+
 function createTerminal(elementId, wsPath, accentColor) {
+    const container = document.getElementById(elementId);
+    container.innerHTML = '';
+
     const term = new Terminal({
         cursorBlink: true,
         theme: {
@@ -190,7 +307,7 @@ function createTerminal(elementId, wsPath, accentColor) {
 
     const fitAddon = new FitAddon.FitAddon();
     term.loadAddon(fitAddon);
-    term.open(document.getElementById(elementId));
+    term.open(container);
     fitAddon.fit();
 
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
@@ -202,6 +319,10 @@ function createTerminal(elementId, wsPath, accentColor) {
 
     ws.onopen = function() {
         sendResize();
+        statusDot.style.background = '#0f0';
+        statusDot.style.boxShadow = '0 0 10px #0f0';
+        statusText.textContent = 'Connected';
+        statusText.style.color = '#0f0';
     };
 
     ws.onmessage = function(event) {
@@ -251,9 +372,134 @@ function createTerminal(elementId, wsPath, accentColor) {
     return { term, fitAddon, ws };
 }
 
-// Create both terminals
-const agentTerminal = createTerminal('terminal-agent', '/ws/terminal/agent', '#00d4ff');
-const shellTerminal = createTerminal('terminal-shell', '/ws/terminal/shell', '#8a2be2');
+function getAgentWsPath() {
+    let path = '/ws/terminal/agent?agent=' + currentAgent;
+    if (currentProject) {
+        path += '&project=' + encodeURIComponent(currentProject);
+    }
+    return path;
+}
+
+function getShellWsPath() {
+    let path = '/ws/terminal/shell';
+    if (currentProject) {
+        path += '?project=' + encodeURIComponent(currentProject);
+    }
+    return path;
+}
+
+function switchAgent(agent) {
+    if (agent === currentAgent) return;
+
+    // Update button states
+    document.querySelectorAll('.agent-btn').forEach(btn => btn.classList.remove('active'));
+    document.querySelector('.agent-btn.' + agent).classList.add('active');
+
+    // Close existing connection
+    if (agentTerminal && agentTerminal.ws) {
+        agentTerminal.ws.close();
+    }
+
+    currentAgent = agent;
+
+    // Create new terminal with selected agent
+    agentTerminal = createTerminal('terminal-agent', getAgentWsPath(), getAgentColor(agent));
+}
+
+function switchProject() {
+    const select = document.getElementById('project-select');
+    const newProject = select.value;
+
+    if (newProject === currentProject) return;
+
+    currentProject = newProject;
+
+    // Close existing connections
+    if (agentTerminal && agentTerminal.ws) {
+        agentTerminal.ws.close();
+    }
+    if (shellTerminal && shellTerminal.ws) {
+        shellTerminal.ws.close();
+    }
+
+    // Create new terminals for the selected project
+    agentTerminal = createTerminal('terminal-agent', getAgentWsPath(), getAgentColor(currentAgent));
+    shellTerminal = createTerminal('terminal-shell', getShellWsPath(), '#8a2be2');
+}
+
+function getAgentColor(agent) {
+    switch (agent) {
+        case 'claude': return '#cc785c';
+        case 'github': return '#238636';
+        case 'gemini': return '#4285f4';
+        case 'pi': return '#f5a623';
+        default: return '#00d4ff';
+    }
+}
+
+function populateRepoSelect(repos) {
+    const select = document.getElementById('project-select');
+    const currentValue = select.value;
+
+    select.innerHTML = '<option value="">(current directory)</option>';
+
+    for (const [org, repoList] of Object.entries(repos)) {
+        const optgroup = document.createElement('optgroup');
+        optgroup.label = org;
+
+        for (const repo of repoList) {
+            const option = document.createElement('option');
+            option.value = org + '/' + repo;
+            option.textContent = repo;
+            if (option.value === currentValue) {
+                option.selected = true;
+            }
+            optgroup.appendChild(option);
+        }
+
+        select.appendChild(optgroup);
+    }
+}
+
+function refreshRepos() {
+    const btn = event.target.closest('.icon-btn');
+    btn.classList.add('spinning');
+
+    fetch('/api/repos')
+        .then(response => response.json())
+        .then(repos => {
+            populateRepoSelect(repos);
+            btn.classList.remove('spinning');
+        })
+        .catch(() => {
+            btn.classList.remove('spinning');
+        });
+}
+
+function syncRepos() {
+    const btn = event.target.closest('.icon-btn');
+    btn.classList.add('spinning');
+
+    fetch('/api/sync', { method: 'POST' })
+        .then(response => response.json())
+        .then(repos => {
+            populateRepoSelect(repos);
+            btn.classList.remove('spinning');
+        })
+        .catch(() => {
+            btn.classList.remove('spinning');
+        });
+}
+
+// Load repos and create terminals on page load
+fetch('/api/repos')
+    .then(response => response.json())
+    .then(repos => {
+        populateRepoSelect(repos);
+    });
+
+agentTerminal = createTerminal('terminal-agent', getAgentWsPath(), '#00d4ff');
+shellTerminal = createTerminal('terminal-shell', getShellWsPath(), '#8a2be2');
 </script>
 </body>
 </html>

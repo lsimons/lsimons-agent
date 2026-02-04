@@ -15,9 +15,15 @@ class Terminal:
 
     SCROLLBACK_SIZE = 64 * 1024  # 64KB scrollback buffer
 
-    def __init__(self, shell: str = "/bin/zsh", command: list[str] | None = None):
+    def __init__(
+        self,
+        shell: str = "/bin/zsh",
+        command: list[str] | None = None,
+        cwd: str | None = None,
+    ):
         self.shell = shell
         self.command = command  # Command to run instead of interactive shell
+        self.cwd = cwd  # Working directory for the terminal
         self.master_fd: int | None = None
         self.pid: int | None = None
         self.output_queue: Queue[bytes] = Queue()
@@ -33,18 +39,30 @@ class Terminal:
 
         pid, fd = pty.fork()
         if pid == 0:
-            # Child process - set up environment for colors
+            # Child process - change to working directory
+            if self.cwd:
+                try:
+                    os.chdir(self.cwd)
+                except OSError:
+                    pass  # Fall back to current directory
+
+            # Set up environment for colors and proper shell detection
             env = os.environ.copy()
             env["TERM"] = "xterm-256color"
             env["CLICOLOR"] = "1"
             env["CLICOLOR_FORCE"] = "1"
             env["COLORTERM"] = "truecolor"
+            env["TERM_PROGRAM"] = "lsimons-agent"
+            env["LC_TERMINAL"] = "lsimons-agent"
+            # Remove ZDOTDIR so zsh uses $HOME for .zshrc
+            env.pop("ZDOTDIR", None)
 
             # Exec shell or command
             if self.command:
                 os.execvpe(self.command[0], self.command, env)
             else:
-                os.execvpe(self.shell, [self.shell], env)
+                # Login shell - should source .zshrc for interactive login
+                os.execvpe(self.shell, [self.shell, "-l"], env)
         else:
             # Parent process
             self.pid = pid

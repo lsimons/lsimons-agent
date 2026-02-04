@@ -2,6 +2,8 @@
 
 import asyncio
 import json
+import os
+import subprocess
 import sys
 from pathlib import Path
 
@@ -13,9 +15,21 @@ from .terminal import Terminal
 
 app = FastAPI()
 
-# Single-user terminal sessions
-terminal_agent: Terminal | None = None
-terminal_shell: Terminal | None = None
+# Terminal sessions keyed by (project_path, terminal_type, agent)
+# e.g., ("/Users/foo/git/org/repo", "agent", "claude") or ("...", "shell", None)
+terminals: dict[tuple[str, str, str | None], Terminal] = {}
+
+# Agent command mapping
+AGENT_COMMANDS = {
+    "lsimons": ["lsimons-agent-client"],
+    "claude": ["claude"],
+    "pi": ["pi"],
+    "gemini": ["gemini"],
+    "github": ["gh", "copilot"],
+}
+
+# Git base directory
+GIT_BASE_DIR = Path.home() / "git"
 
 
 def get_resource_path(relative_path: str) -> Path:
@@ -45,10 +59,35 @@ def event_stream(user_message: str):
             yield "event: done\ndata: {}\n\n"
 
 
+def scan_git_repos() -> dict[str, list[str]]:
+    """Scan ~/git for git repositories, organized by org."""
+    repos: dict[str, list[str]] = {}
+
+    if not GIT_BASE_DIR.exists():
+        return repos
+
+    for org_dir in sorted(GIT_BASE_DIR.iterdir()):
+        if not org_dir.is_dir() or org_dir.name.startswith("."):
+            continue
+
+        org_repos = []
+        for repo_dir in sorted(org_dir.iterdir()):
+            if not repo_dir.is_dir() or repo_dir.name.startswith("."):
+                continue
+            # Check if it's a git repo
+            if (repo_dir / ".git").exists():
+                org_repos.append(repo_dir.name)
+
+        if org_repos:
+            repos[org_dir.name] = org_repos
+
+    return repos
+
+
 @app.get("/", response_class=HTMLResponse)
 def index():
-    """Serve the chat page."""
-    return (TEMPLATES_DIR / "index.html").read_text()
+    """Serve the terminal page."""
+    return (TEMPLATES_DIR / "terminal.html").read_text()
 
 
 @app.get("/favicon.ico")
@@ -80,10 +119,20 @@ def clear():
     return {"status": "ok"}
 
 
-@app.get("/terminal", response_class=HTMLResponse)
-def terminal_page():
-    """Serve the terminal page."""
-    return (TEMPLATES_DIR / "terminal.html").read_text()
+@app.get("/api/repos")
+def list_repos():
+    """List available git repositories."""
+    return scan_git_repos()
+
+
+@app.post("/api/sync")
+def sync_repos():
+    """Run auto git-sync and return updated repo list."""
+    try:
+        subprocess.run(["auto", "git-sync"], check=True, capture_output=True)
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        pass  # Ignore errors, still return repo list
+    return scan_git_repos()
 
 
 async def _handle_terminal_websocket(
@@ -133,66 +182,91 @@ async def _handle_terminal_websocket(
         pass
 
 
+def get_project_path(project: str | None) -> str:
+    """Get the full path for a project, or cwd if None."""
+    if not project:
+        return os.getcwd()
+
+    # Project format: "org/repo"
+    if "/" in project:
+        return str(GIT_BASE_DIR / project)
+
+    return os.getcwd()
+
+
 @app.websocket("/ws/terminal/agent")
-async def terminal_agent_websocket(websocket: WebSocket):
+async def terminal_agent_websocket(
+    websocket: WebSocket, agent: str = "lsimons", project: str | None = None
+):
     """WebSocket endpoint for agent terminal."""
-    global terminal_agent
+    global terminals
 
     await websocket.accept()
 
+    # Validate agent type
+    if agent not in AGENT_COMMANDS:
+        agent = "lsimons"
+
+    project_path = get_project_path(project)
+    key = (project_path, "agent", agent)
+
     # Clean up dead terminal
-    if terminal_agent is not None and not terminal_agent.is_running():
-        terminal_agent.stop()
-        terminal_agent = None
+    if key in terminals and not terminals[key].is_running():
+        terminals[key].stop()
+        del terminals[key]
 
     # Start new terminal or reconnect to existing
-    if terminal_agent is None:
-        terminal_agent = Terminal(command=["lsimons-agent-client"])
-        terminal_agent.start()
+    if key not in terminals:
+        terminal = Terminal(command=AGENT_COMMANDS[agent], cwd=project_path)
+        terminal.start()
+        terminals[key] = terminal
     else:
         # Reconnecting - replay scrollback buffer
-        scrollback = terminal_agent.get_scrollback()
+        scrollback = terminals[key].get_scrollback()
         if scrollback:
             await websocket.send_bytes(scrollback)
 
-    await _handle_terminal_websocket(websocket, terminal_agent)
+    await _handle_terminal_websocket(websocket, terminals[key])
 
 
 @app.websocket("/ws/terminal/shell")
-async def terminal_shell_websocket(websocket: WebSocket):
+async def terminal_shell_websocket(
+    websocket: WebSocket, project: str | None = None
+):
     """WebSocket endpoint for shell terminal."""
-    global terminal_shell
+    global terminals
 
     await websocket.accept()
 
+    project_path = get_project_path(project)
+    key = (project_path, "shell", None)
+
     # Clean up dead terminal
-    if terminal_shell is not None and not terminal_shell.is_running():
-        terminal_shell.stop()
-        terminal_shell = None
+    if key in terminals and not terminals[key].is_running():
+        terminals[key].stop()
+        del terminals[key]
 
     # Start new terminal or reconnect to existing
-    if terminal_shell is None:
-        terminal_shell = Terminal()
-        terminal_shell.start()
+    if key not in terminals:
+        terminal = Terminal(cwd=project_path)
+        terminal.start()
+        terminals[key] = terminal
     else:
         # Reconnecting - replay scrollback buffer
-        scrollback = terminal_shell.get_scrollback()
+        scrollback = terminals[key].get_scrollback()
         if scrollback:
             await websocket.send_bytes(scrollback)
 
-    await _handle_terminal_websocket(websocket, terminal_shell)
+    await _handle_terminal_websocket(websocket, terminals[key])
 
 
 @app.post("/terminal/stop")
 def terminal_stop():
     """Stop all terminal sessions."""
-    global terminal_agent, terminal_shell
-    if terminal_agent is not None:
-        terminal_agent.stop()
-        terminal_agent = None
-    if terminal_shell is not None:
-        terminal_shell.stop()
-        terminal_shell = None
+    global terminals
+    for terminal in terminals.values():
+        terminal.stop()
+    terminals.clear()
     return {"status": "ok"}
 
 

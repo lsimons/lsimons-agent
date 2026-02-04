@@ -23,7 +23,8 @@ def test_app_has_routes():
     assert "/" in routes
     assert "/chat" in routes
     assert "/clear" in routes
-    assert "/terminal" in routes
+    assert "/api/repos" in routes
+    assert "/api/sync" in routes
     assert "/ws/terminal/agent" in routes
     assert "/ws/terminal/shell" in routes
     assert "/terminal/stop" in routes
