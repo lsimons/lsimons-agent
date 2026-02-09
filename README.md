@@ -176,7 +176,7 @@ For testing, leave these unset to use defaults (mock server on localhost:8000).
 
 ## Tech Stack
 
-* **Python 3.12+** - Main language
+* **Python 3.14+** - Main language
 * **uv** - Package management and virtual environments
 * **FastAPI** - Web framework for the API
 * **Electron** - Desktop app wrapper

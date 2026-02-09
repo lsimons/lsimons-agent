@@ -2,23 +2,23 @@
 name = "lsimons-agent-workspace"
 version = "0.1.0"
 description = "Custom CLI coding agent workspace"
-requires-python = ">=3.13"
+requires-python = ">=3.14"
 
 [dependency-groups]
-dev = ["ruff", "pytest", "pyinstaller", "pillow", "pyright>=1.1.390"]
+dev = ["ruff", "pytest", "pyinstaller", "pillow", "basedpyright>=1.22.0"]
 
 [tool.uv.workspace]
 members = ["packages/lsimons-agent", "packages/mock-llm-server", "packages/lsimons-agent-web"]
 
 [tool.ruff]
 line-length = 100
-target-version = "py313"
+target-version = "py314"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "W", "UP", "B", "SIM"]
 
-[tool.pyright]
-pythonVersion = "3.13"
+[tool.basedpyright]
+pythonVersion = "3.14"
 typeCheckingMode = "strict"
 
 [tool.pytest.ini_options]
