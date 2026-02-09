@@ -13,7 +13,9 @@ if os.environ.get("LLM_API_KEY"):
     _config = load_config()
     _client = LLMClient(_config)
 
-    def chat(messages: list[dict[str, Any]], tools: list[dict[str, Any]] | None = None) -> dict[str, Any]:
+    def chat(
+        messages: list[dict[str, Any]], tools: list[dict[str, Any]] | None = None
+    ) -> dict[str, Any]:
         """Send messages to LLM and return raw API response dict."""
         return _client.chat_raw(messages, tools)
 else:

@@ -17,7 +17,7 @@ def test_read_file():
 def test_read_file_not_found():
     try:
         read_file("/nonexistent/file.txt")
-        assert False, "Should have raised FileNotFoundError"
+        raise AssertionError("Should have raised FileNotFoundError")
     except FileNotFoundError:
         pass
 
@@ -53,7 +53,7 @@ def test_edit_file_string_not_found():
         f.flush()
         try:
             edit_file(f.name, "foo", "bar")
-            assert False, "Should have raised ValueError"
+            raise AssertionError("Should have raised ValueError")
         except ValueError as e:
             assert "not found" in str(e)
 
@@ -64,7 +64,7 @@ def test_edit_file_string_not_unique():
         f.flush()
         try:
             edit_file(f.name, "hello", "hi")
-            assert False, "Should have raised ValueError"
+            raise AssertionError("Should have raised ValueError")
         except ValueError as e:
             assert "3 times" in str(e)
 

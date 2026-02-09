@@ -1,6 +1,7 @@
 """Web server for lsimons-agent."""
 
 import asyncio
+import contextlib
 import json
 import subprocess
 import sys
@@ -128,10 +129,8 @@ def list_repos():
 @app.post("/api/sync")
 def sync_repos():
     """Run auto git-sync and return updated repo list."""
-    try:
+    with contextlib.suppress(subprocess.CalledProcessError, FileNotFoundError):
         subprocess.run(["auto", "git-sync"], check=True, capture_output=True)
-    except (subprocess.CalledProcessError, FileNotFoundError):
-        pass  # Ignore errors, still return repo list
     return scan_git_repos()
 
 
@@ -170,7 +169,7 @@ async def _handle_terminal_websocket(websocket: WebSocket, terminal: Terminal) -
                     except json.JSONDecodeError:
                         # Plain text input
                         terminal.write(message["text"].encode())
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 pass
 
     except (WebSocketDisconnect, RuntimeError):
