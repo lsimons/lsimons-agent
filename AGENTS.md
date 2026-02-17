@@ -1,5 +1,7 @@
 # Agent Instructions for lsimons-agent
 
+> This file (`AGENTS.md`) is the canonical agent configuration. `CLAUDE.md` is a symlink to this file.
+
 Custom CLI coding agent for @lsimons and @lsimons-bot. Hello-world style implementation optimized for readability.
 
 ## Quick Reference
