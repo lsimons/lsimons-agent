@@ -6,20 +6,22 @@ Custom CLI coding agent for @lsimons and @lsimons-bot. Hello-world style impleme
 
 ## Quick Reference
 
+**One-time (any language):** `mise install`
+
 **Python (core):**
-- **Setup**: `uv sync`
+- **Setup**: `mise run install` (or `uv sync --all-groups --all-packages`)
 - **Run CLI**: `uv run lsimons-agent`
 - **Run Web**: `uv run lsimons-agent-web`
 - **Run Mock LLM**: `uv run mock-llm-server`
-- **Lint**: `uv run ruff check .`
-- **Format**: `uv run ruff format .`
-- **Test**: `uv run pytest`
+- **Lint**: `mise run lint` (ruff check + format --check)
+- **Typecheck**: `mise run typecheck` (basedpyright)
+- **Format**: `mise run format`
+- **Test**: `mise run test` (or `uv run pytest`)
+- **Full CI gate**: `mise run ci`
 
 **JavaScript (electron, e2e):**
-- **Setup**: `pnpm install` (in package dir)
-- **Lint**: `pnpm run lint`
-- **Format**: `pnpm run prettier`
-- **Test**: `pnpm run test`
+- **Setup**: `cd packages/<pkg> && npm install`
+- **Lint / Format / Test**: use each package's own scripts
 
 ## Structure
 
@@ -63,8 +65,7 @@ Work is NOT complete until `git push` succeeds.
 
 1. **Quality gates** (if code changed):
    ```bash
-   uv run ruff check . && uv run ruff format --check .
-   uv run pytest
+   mise run ci
    ```
 
 2. **Push**:

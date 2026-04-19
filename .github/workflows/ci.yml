@@ -7,43 +7,39 @@ on:
     branches: [main]
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   lint-and-test:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - name: Set up mise
+        uses: jdx/mise-action@1648a7812b9aeae629881980618f079932869151 # v4.0.1
         with:
-          python-version: "3.14"
-
-      - name: Install uv
-        uses: astral-sh/setup-uv@v4
-        with:
-          version: "latest"
+          install: true
+          cache: true
 
       - name: Cache uv dependencies
-        uses: actions/cache@v4
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5
         with:
           path: ~/.cache/uv
           key: ${{ runner.os }}-uv-${{ hashFiles('uv.lock') }}
           restore-keys: |
             ${{ runner.os }}-uv-
 
-      - name: Sync dependencies
-        run: uv sync --all-groups --all-packages
+      - name: Install
+        run: mise run install
 
-      - name: Run ruff linting
-        run: uv run ruff check .
+      - name: Lint
+        run: mise run lint
 
-      - name: Run ruff format check
-        run: uv run ruff format --check .
+      - name: Typecheck
+        run: mise run typecheck
 
-      - name: Run basedpyright type checking
-        run: uv run basedpyright packages/lsimons-agent/src packages/lsimons-agent-web/src packages/mock-llm-server/src
-
-      - name: Run pytest
-        run: uv run pytest
+      - name: Test
+        run: mise run test

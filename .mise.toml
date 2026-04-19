@@ -1,0 +1,56 @@
+# mise: https://mise.jdx.dev/
+#
+# uv workspace for Python packages; electron + e2e tests use npm per
+# package. pyproject.toml's `requires-python` stays authoritative.
+
+[tools]
+python = "3.14"
+uv = "latest"
+node = "24"
+
+[env]
+_.file = { path = ".env", optional = true }
+
+[tasks."py:install"]
+description = "uv sync (all groups + packages)"
+run = "uv sync --all-groups --all-packages"
+
+[tasks."py:lint"]
+description = "ruff check + format --check"
+run = ["uv run ruff check .", "uv run ruff format --check ."]
+
+[tasks."py:format"]
+description = "ruff format + ruff check --fix"
+run = ["uv run ruff format .", "uv run ruff check --fix ."]
+
+[tasks."py:typecheck"]
+description = "basedpyright on Python sources"
+run = "uv run basedpyright packages/lsimons-agent/src packages/lsimons-agent-web/src packages/mock-llm-server/src"
+
+[tasks."py:test"]
+description = "pytest"
+run = "uv run pytest"
+
+[tasks.install]
+description = "Install all deps (Python workspace)"
+depends = ["py:install"]
+
+[tasks.lint]
+description = "Lint Python"
+depends = ["py:lint"]
+
+[tasks.format]
+description = "Format Python"
+depends = ["py:format"]
+
+[tasks.typecheck]
+description = "Typecheck Python"
+depends = ["py:typecheck"]
+
+[tasks.test]
+description = "Run Python tests"
+depends = ["py:test"]
+
+[tasks.ci]
+description = "Full CI gate (Python)"
+depends = ["lint", "typecheck", "test"]
