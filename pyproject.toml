@@ -23,3 +23,6 @@ typeCheckingMode = "strict"
 
 [tool.pytest.ini_options]
 testpaths = ["packages/lsimons-agent/tests", "packages/lsimons-agent-web/tests"]
+
+[tool.uv]
+exclude-newer = "1 week"
