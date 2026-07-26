@@ -11,55 +11,37 @@ node = "24"
 [env]
 _.file = { path = ".env", optional = true }
 
-[tasks."py:install"]
+[tasks.install]
 description = "uv sync (all groups + packages)"
 run = "uv sync --all-groups --all-packages"
 
-[tasks."py:lint"]
+[tasks.lint]
 description = "ruff check + format --check"
 run = ["uv run ruff check .", "uv run ruff format --check ."]
 
-[tasks."py:format"]
+[tasks.format]
 description = "ruff format + ruff check --fix"
 run = ["uv run ruff format .", "uv run ruff check --fix ."]
 
-[tasks."py:typecheck"]
-description = "basedpyright on Python sources"
-run = "uv run basedpyright packages/lsimons-agent/src packages/lsimons-agent-web/src packages/mock-llm-server/src"
+[tasks.typecheck]
+description = "basedpyright"
+run = "uv run basedpyright"
 
-[tasks."py:test"]
+[tasks.test]
 description = "pytest"
 run = "uv run pytest"
 
-[tasks.install]
-description = "Install all deps (Python workspace)"
-depends = ["py:install"]
-
-[tasks.lint]
-description = "Lint Python"
-depends = ["py:lint"]
-
-[tasks.format]
-description = "Format Python"
-depends = ["py:format"]
-
-[tasks.typecheck]
-description = "Typecheck Python"
-depends = ["py:typecheck"]
-
-[tasks.test]
-description = "Run Python tests"
-depends = ["py:test"]
-
 [tasks.ci]
-description = "Full CI gate (Python)"
+description = "Full CI gate"
 depends = ["lint", "typecheck", "test"]
 
 [tasks.ci-watch]
 description = "Watch GitHub Actions CI for the current branch; exits non-zero on failure"
 run = """
 sleep 5
-run_id=$(gh run list --branch "$(git branch --show-current)" --limit 1 --json databaseId --jq '.[0].databaseId')
-if [ -z "$run_id" ]; then echo "No run found for current branch" >&2; exit 1; fi
-gh run watch --exit-status "$run_id"
+remote_url=$(git remote get-url upstream 2>/dev/null || git remote get-url origin)
+repo=$(echo "$remote_url" | sed -E 's|^.*github\\.com[:/]||; s|\\.git$||')
+run_id=$(gh run list --repo "$repo" --branch "$(git branch --show-current)" --limit 1 --json databaseId --jq '.[0].databaseId')
+if [ -z "$run_id" ]; then echo "No run found for current branch on $repo" >&2; exit 1; fi
+gh run watch --repo "$repo" --exit-status "$run_id"
 """

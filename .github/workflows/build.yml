@@ -24,7 +24,7 @@ jobs:
           cache: false
 
       - name: Install Python dependencies
-        run: mise run py:install
+        run: mise run install
 
       - name: Install Node dependencies
         run: cd packages/lsimons-agent-electron && npm ci
@@ -55,7 +55,7 @@ jobs:
           cache: false
 
       - name: Install Python dependencies
-        run: mise run py:install
+        run: mise run install
 
       - name: Install Node dependencies
         run: cd packages/lsimons-agent-electron && npm ci
@@ -84,7 +84,7 @@ jobs:
           cache: false
 
       - name: Install Python dependencies
-        run: mise run py:install
+        run: mise run install
 
       - name: Install Node dependencies
         run: cd packages/lsimons-agent-electron && npm ci
